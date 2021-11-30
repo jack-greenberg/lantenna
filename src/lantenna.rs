@@ -1,6 +1,6 @@
 use std::net::UdpSocket;
-use std::time::{Duration, Instant};
 use std::thread::sleep;
+use std::time::{Duration, Instant};
 use thiserror::Error;
 
 // Milliseconds
@@ -18,7 +18,7 @@ pub enum LantennaError {
     EncodingError,
 }
 
-pub fn init(host: &'static str) -> Result<UdpSocket, LantennaError> {
+pub fn init(host: &str) -> Result<UdpSocket, LantennaError> {
     let socket = match UdpSocket::bind(host) {
         Ok(socket) => Ok(socket),
         Err(e) => Err(LantennaError::SocketError(e)),
@@ -27,7 +27,7 @@ pub fn init(host: &'static str) -> Result<UdpSocket, LantennaError> {
     socket
 }
 
-pub fn send(socket: &UdpSocket, receiver: &str, data: &[u8]) -> Result<(), LantennaError> {
+pub fn send(socket: &UdpSocket, receiver: &str, data: Vec<u8>) -> Result<(), LantennaError> {
     for byte in data {
         for i in 0..8 {
             let bit = {
@@ -41,10 +41,10 @@ pub fn send(socket: &UdpSocket, receiver: &str, data: &[u8]) -> Result<(), Lante
             match bit {
                 false => {
                     transmit_0(socket, receiver);
-                },
+                }
                 true => {
                     transmit_1(socket, receiver);
-                },
+                }
             }
         }
     }
@@ -54,10 +54,9 @@ pub fn send(socket: &UdpSocket, receiver: &str, data: &[u8]) -> Result<(), Lante
 fn transmit_0(socket: &UdpSocket, receiver: &str) -> Result<(), LantennaError> {
     let start = Instant::now();
     let half_bit_time = Duration::from_millis(bit_time / 2);
-    
+
     while start.elapsed() < half_bit_time {
-        // println!("0");
-        // sleep(Duration::from_millis(10));
+        socket.send_to(&[0x55; 1], receiver).expect("Couldn't send");
     }
 
     sleep(half_bit_time);
@@ -71,10 +70,9 @@ fn transmit_1(socket: &UdpSocket, receiver: &str) -> Result<(), LantennaError> {
     sleep(half_bit_time);
 
     let start = Instant::now();
-    
+
     while start.elapsed() < half_bit_time {
-        // println!("1");
-        // sleep(Duration::from_millis(10));
+        socket.send_to(&[0x55; 1], receiver).expect("Couldn't send");
     }
 
     Ok(())

@@ -1,18 +1,42 @@
 mod lantenna;
 
-// use std::collections::HashMap;
-use lantenna::{send, init};
-// use config::Config;
+use clap::{App, Arg};
+use lantenna::{init, send};
+use std::io::Read;
 
-fn main() {
-    let socket = init("127.0.0.1:34254").unwrap();
-    send(&socket, "127.0.0.1:34253", &[4]);
-    // let mut settings = Config::default();
-    // settings
-    //     .merge(config::File::with_name("lantenna")).unwrap();
-        // .clone()
-        // .try_into::<HashMap<String, String>>()
-        // .unwrap();
-// 
-//     println!("byte_time: {}", settings.get("byte_time").unwrap());
+fn main() -> Result<(), lantenna::LantennaError> {
+    let args = App::new("lantenna")
+        .arg(Arg::new("INPUT").about("File to send"))
+        .arg(
+            Arg::new("host")
+                .about("The host to send the data from")
+                .required(true)
+                .short('h')
+                .takes_value(true), // .validator(ip_validator)
+        )
+        .arg(
+            Arg::new("target")
+                .about("The target to send data to")
+                .required(true)
+                .short('t')
+                .takes_value(true), // .validator(ip_validator)
+        )
+        .get_matches();
+
+    if let Some(host) = args.value_of("host") {
+        let socket = init(&host).unwrap();
+
+        if let Some(target) = args.value_of("target") {
+            match args.value_of("INPUT") {
+                Some(file) => send(&socket, &target, std::fs::read(file).unwrap()),
+                None => {
+                    let mut v = Vec::new();
+                    std::io::stdin().read_to_end(&mut v).unwrap();
+                    send(&socket, &target, v)
+                }
+            };
+        }
+    }
+
+    Ok(())
 }
