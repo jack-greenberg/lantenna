@@ -4,18 +4,12 @@ use std::time::{Duration, Instant};
 use thiserror::Error;
 
 // Milliseconds
-const bit_time: u64 = 100;
+const BIT_TIME: u64 = 1000; // 5 Hz
 
 #[derive(Error, Debug)]
 pub enum LantennaError {
     #[error("Couldn't bind to socket")]
     SocketError(#[from] std::io::Error),
-
-    #[error("Sending failed")]
-    SendError(String),
-
-    #[error("Couldn't encode the data")]
-    EncodingError,
 }
 
 pub fn init(host: &str) -> Result<UdpSocket, LantennaError> {
@@ -51,29 +45,25 @@ pub fn send(socket: &UdpSocket, receiver: &str, data: Vec<u8>) -> Result<(), Lan
     Ok(())
 }
 
-fn transmit_0(socket: &UdpSocket, receiver: &str) -> Result<(), LantennaError> {
+fn transmit_0(socket: &UdpSocket, receiver: &str) {
     let start = Instant::now();
-    let half_bit_time = Duration::from_millis(bit_time / 2);
+    let half_bit_time = Duration::from_millis(BIT_TIME / 2);
 
     while start.elapsed() < half_bit_time {
-        socket.send_to(&[0x55; 1], receiver).expect("Couldn't send");
+        socket.send_to(&[0x55; 1024], receiver).expect("Couldn't send");
     }
 
     sleep(half_bit_time);
-
-    Ok(())
 }
 
-fn transmit_1(socket: &UdpSocket, receiver: &str) -> Result<(), LantennaError> {
-    let half_bit_time = Duration::from_millis(bit_time / 2);
+fn transmit_1(socket: &UdpSocket, receiver: &str) {
+    let half_bit_time = Duration::from_millis(BIT_TIME / 2);
 
     sleep(half_bit_time);
 
     let start = Instant::now();
 
     while start.elapsed() < half_bit_time {
-        socket.send_to(&[0x55; 1], receiver).expect("Couldn't send");
+        socket.send_to(&[0x55; 1024], receiver).expect("Couldn't send");
     }
-
-    Ok(())
 }

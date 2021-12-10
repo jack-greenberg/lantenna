@@ -23,6 +23,7 @@ fn main() -> Result<(), lantenna::LantennaError> {
         )
         .get_matches();
 
+
     if let Some(host) = args.value_of("host") {
         let socket = init(&host).unwrap();
 
@@ -35,7 +36,11 @@ fn main() -> Result<(), lantenna::LantennaError> {
                     send(&socket, &target, v)
                 }
             };
+        } else {
+            println!("nah");
         }
+    } else {
+        println!("Nope");
     }
 
     Ok(())
