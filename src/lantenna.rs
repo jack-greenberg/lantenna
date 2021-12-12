@@ -4,7 +4,7 @@ use std::time::{Duration, Instant};
 use thiserror::Error;
 
 // Milliseconds
-const BIT_TIME: u64 = 1000; // 5 Hz
+const BIT_TIME: u64 = 1000;
 
 #[derive(Error, Debug)]
 pub enum LantennaError {
